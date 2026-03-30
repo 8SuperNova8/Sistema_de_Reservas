@@ -42,6 +42,17 @@ class ReservationSerializer (serializers.ModelSerializer):
             )
         return data
     
+class ChangeStatusSerializer(serializers.Serializer):
+    status = serializers.CharField()
+
+    def validate(self, data):
+        #verificar campos adicioales
+        alowed_fields = {'status'}
+        received_fields = set(self.initial_data.keys())
+
+        if received_fields != alowed_fields:
+            raise serializers.ValidationError('Only the "status" field can be modified')
+        return data
     
 '''    
 #consulta por cedula 

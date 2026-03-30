@@ -42,7 +42,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
-    'rest_framework',                       
+    'rest_framework', 
+    'drf_spectacular',
+    'drf_spectacular_sidecar',  
+    'django_filters',                    
     'apps.rooms',
     'apps.reservations',
     'apps.payments',
@@ -135,6 +138,17 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Hotel API",
+    "DESCRIPTION": "API documentation",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "EXTENSIONS_INFO": {
+        "django_filters": True
+    },
+}
+
 CORS_ALLOWED_ORIGINS = [
     
 ]
@@ -150,5 +164,9 @@ REST_FRAMEWORK = {
         'user': '100/minute',   # admins
         'reservation': '5/minute'
 
-    }
+    },
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    "DEFAULT_FILTER_BACKENDS": [  
+		"django_filters.rest_framework.DjangoFilterBackend"  
+		]  
 }

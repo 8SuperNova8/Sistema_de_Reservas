@@ -1,10 +1,15 @@
 from rest_framework import routers
-from apps.reservations.views import ReservationViewSets
+from rest_framework.routers import DefaultRouter
+from apps.reservations.views import ReservationViewSet, AdminReservationViewSet
 from django.urls import path, include
 
-router = routers.DefaultRouter()
-router.register ('reservations', ReservationViewSets)
+router_public = DefaultRouter()
+router_public.register ('reservations', ReservationViewSet, basename='public-resrevations')
+
+router_admin = DefaultRouter()
+router_admin.register(r'reservations', AdminReservationViewSet, basename='admin-reservations')
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('public/', include(router_public.urls)),
+    path('admin/', include(router_admin.urls)),
 ]
