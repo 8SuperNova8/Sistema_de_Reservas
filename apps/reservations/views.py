@@ -5,7 +5,8 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny
+from apps.accounts.permissions import BaseUserPermission, IsSuperUser
 from apps.reservations.models import Reservation
 from apps.reservations.serializers import ReservationSerializer, ChangeStatusSerializer
 from django.db import transaction
@@ -58,7 +59,7 @@ class AdminReservationViewSet(
 ):
     serializer_class = ReservationSerializer
     queryset = Reservation.objects.all()
-    permission_classes = [IsAdminUser]
+    permission_classes = [BaseUserPermission, IsSuperUser]
 
     filter_backends = [DjangoFilterBackend]
     filterset_class = ReservationFilter
