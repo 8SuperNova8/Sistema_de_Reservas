@@ -6,7 +6,7 @@ from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from apps.accounts.permissions import BaseUserPermission, IsSuperUser
+from apps.accounts.permissions import IsSuperUser, IsReceptionist
 from apps.reservations.models import Reservation
 from apps.reservations.serializers import ReservationSerializer, ChangeStatusSerializer
 from django.db import transaction
@@ -59,7 +59,7 @@ class AdminReservationViewSet(
 ):
     serializer_class = ReservationSerializer
     queryset = Reservation.objects.all()
-    permission_classes = [BaseUserPermission, IsSuperUser]
+    permission_classes = [IsReceptionist | IsSuperUser]
 
     filter_backends = [DjangoFilterBackend]
     filterset_class = ReservationFilter
@@ -68,7 +68,7 @@ class AdminReservationViewSet(
 
     # para Admin
     # confirmed ->chek_in o -> no_show
-    @action(detail=True, methods=['patch'])
+    @action(detail=True, methods=['patch'], serializer_class=ChangeStatusSerializer)
     def change_status (self, request, pk=None):
         reservation = self.get_object()
         #new_status = request.data.get('status')

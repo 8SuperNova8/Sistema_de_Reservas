@@ -4,7 +4,7 @@ from apps.rooms.models import Room, RoomType
 from apps.rooms.serializers import RoomSerializer, RoomTypeSerializer
 from .mixins import AvailableRoomsMixin
 from rest_framework.permissions import AllowAny
-from apps.accounts.permissions import BaseUserPermission, IsSuperUser
+from apps.accounts.permissions import IsSuperUser, IsReceptionist
 
 #Perfil Publico
 class RoomTypeViewSet (
@@ -29,7 +29,7 @@ class RoomViewSet (
 class RoomTypeAdminViewset (viewsets.ModelViewSet):
     serializer_class= RoomTypeSerializer
     queryset = RoomType.objects.all()
-    permission_classes = [BaseUserPermission, IsSuperUser]
+    permission_classes = [IsReceptionist | IsSuperUser]
 
     
 class RoomAdminViewSet(
@@ -38,4 +38,4 @@ class RoomAdminViewSet(
     ):
     serializer_class = RoomSerializer
     queryset = Room.objects.all()
-    permission_classes = [BaseUserPermission, IsSuperUser]
+    permission_classes = [IsSuperUser | IsReceptionist]

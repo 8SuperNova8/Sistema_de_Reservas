@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 from dotenv import load_dotenv  
 import os  
+from datetime import timedelta
   
 load_dotenv()
 
@@ -151,12 +152,18 @@ SPECTACULAR_SETTINGS = {
     },
 }
 
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=240),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+}
+
 CORS_ALLOWED_ORIGINS = [
     
 ]
 
-#configuracion del rate limmit
+
 REST_FRAMEWORK = {
+    #configuracion del rate limmit
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle'

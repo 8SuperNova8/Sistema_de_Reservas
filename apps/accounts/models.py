@@ -3,9 +3,7 @@ from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
     username = None
-    is_staff = None
     email = models.EmailField(unique=True)
-    is_active = models.BooleanField(default=True)
 
     #campo que se usará para autenticación
     USERNAME_FIELD = 'email'

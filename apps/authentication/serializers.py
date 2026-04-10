@@ -1,3 +1,9 @@
+from rest_framework import serializers
+
+class ChangePasswordSerializer(serializers.Serializer):
+    current_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
+
 '''
 from rest_framework import serializers
 from django.contrib.auth.models import User

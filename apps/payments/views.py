@@ -1,5 +1,5 @@
 from rest_framework import viewsets, mixins
-from apps.accounts.permissions import BaseUserPermission, IsSuperUser
+from apps.accounts.permissions import IsSuperUser, IsReceptionist
 from apps.payments.serializers import PaymentSerializer
 from apps.payments.models import Payment
 
@@ -11,4 +11,4 @@ class PaymentAdminViewSet (
     ):
     serializer_class = PaymentSerializer
     queryset = Payment.objects.all()
-    permission_classes = [BaseUserPermission, IsSuperUser]
+    permission_classes = [IsSuperUser | IsReceptionist]
