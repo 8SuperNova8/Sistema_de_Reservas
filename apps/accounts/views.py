@@ -42,8 +42,8 @@ class UserAdminViewSet(viewsets.ModelViewSet):
 
         return Response({'detail':'promoted to superuser'}, status=status.HTTP_200_OK)
     
-    @action(detail=True, methods=['post'])
     #@extend_schema(request=None, responses={200:None})
+    @action(detail=True, methods=['post'])
     def demote(self, request, pk=None):
         user = self.get_object()
         user.is_superuser = False

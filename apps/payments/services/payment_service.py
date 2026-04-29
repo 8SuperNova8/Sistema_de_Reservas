@@ -2,7 +2,7 @@ from rest_framework.exceptions import ValidationError
 from apps.payments.models import Payment
 
 def create_payment(reservation, amount, payment_method, status='completed'):
-    if reservation.status != 'finished':
+    if reservation.status == 'finished':
         raise ValidationError({'error': 'You cannot create a payment for a closed reservation'})
     
     if amount <= 0:

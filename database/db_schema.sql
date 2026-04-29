@@ -1,85 +1,98 @@
-CREATE DATABASE IF NOT EXISTS dj_infinite_harmony_hotel;
-USE dj_infinite_harmony_hotel;
 
 -- ==================================================
--- CREACIÓN DE TABLAS PARA SISTEMA DE RESERVAS HOTEL
+-- CREACIÓN DE TABLAS PARA SISTEMA DE RESERVAS 
 -- ==================================================
 
--- 1. Tipos de habitaciones
+
+-- ENUM TYPES
+CREATE TYPE payment_method_enum AS ENUM ('cash', 'card', 'transfer');
+CREATE TYPE payment_status_enum AS ENUM ('pending', 'completed', 'failed');
+CREATE TYPE reservation_status_enum AS ENUM ('confirmed', 'checked_in', 'cancelled', 'no_show', 'finished');
+CREATE TYPE room_status_enum AS ENUM ('active', 'maintenance', 'inactive');
+
+
+-- ==============================
+-- TABLE: room_types
+-- ==============================
 CREATE TABLE room_types (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     description TEXT,
-    base_price DECIMAL(10,2) NOT NULL
+    base_price NUMERIC(10,2) NOT NULL
 );
 
--- 2. Habitaciones
+
+-- ==============================
+-- TABLE: rooms
+-- ==============================
 CREATE TABLE rooms (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     room_number INT NOT NULL UNIQUE,
     floor INT NOT NULL,
-    status ENUM(
-        'active',
-        'maintenance',
-        'inactive') DEFAULT 'active' NOT NULL,
+    status room_status_enum NOT NULL DEFAULT 'active',
     room_type_id INT NOT NULL,
-    FOREIGN KEY (room_type_id) REFERENCES room_types(id) ON DELETE RESTRICT
+    CONSTRAINT rooms_room_type_fk
+        FOREIGN KEY (room_type_id)
+        REFERENCES room_types(id)
+        ON DELETE RESTRICT
 );
 
--- 3. Reservas
+-- INDEX for FK
+CREATE INDEX idx_rooms_room_type_id ON rooms(room_type_id);
+
+
+-- ==============================
+-- TABLE: reservations
+-- ==============================
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TABLE reservations (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     room_id INT NOT NULL,
     check_in DATE NOT NULL,
     check_out DATE NOT NULL,
-    reservation_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    /* confirmed = reserva activa(futuro)
-    checked_in = huesped en el hotel (presente)
-    cancelled = Canceló (pasado)
-    no_show =  No llegó (pasado)
-    finished = Termina la estancia del huesped (pasado)*/
-    status ENUM(
-        'confirmed', 
-        'checked_in', 
-        'cancelled', 
-        'no_show',
-        'finished' 
-        ) DEFAULT 'confirmed' NOT NULL,
-    total_amount DECIMAL(10,2) NOT NULL,
-
-    -- Datos del huésped
+    reservation_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status reservation_status_enum NOT NULL DEFAULT 'confirmed',
+    total_amount NUMERIC(10,2) NOT NULL,
     guest_name VARCHAR(100) NOT NULL,
     guest_email VARCHAR(100) NOT NULL,
     guest_phone VARCHAR(20) NOT NULL,
     guest_document VARCHAR(50) NOT NULL,
-    -- para generar el token de reserva
-    token
 
-    -- Datos de tarjeta (SOLO PARA GARANTÍA - NUNCA GUARDAR NÚMERO COMPLETO)`
-    /*
-    card_last_four VARCHAR(4) NOT NULL, -- Últimos 4 dígitos
-    card_holder_name VARCHAR(100) NOT NULL,
-    card_brand VARCHAR(20) NOT NULL, -- Visa, MC, Amex
-    tokenization_id VARCHAR(100) NOT NULL, -- Token de pago (NO la tarjeta)
-    authorization_code VARCHAR(100) NOT NULL, -- Código de autorización de la pre-autorización
-    */
+    token UUID NOT NULL DEFAULT gen_random_uuid(),
 
-    FOREIGN KEY (room_id) REFERENCES rooms(id)  ON DELETE RESTRICT,
+    extra_charges NUMERIC(10,2) DEFAULT 0.00,
 
-    -- Evita duplicados en el mismo rango de fechas
-    CONSTRAINT uq_reservation UNIQUE (room_id, check_in, check_out)
+    CONSTRAINT uq_reservation UNIQUE (room_id, check_in, check_out),
+
+    CONSTRAINT reservations_room_fk
+        FOREIGN KEY (room_id)
+        REFERENCES rooms(id)
+        ON DELETE RESTRICT
 );
 
--- 4. Pagos
-CREATE TABLE payments (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    reservation_id INT NOT NULL,
-    amount DECIMAL(10,2) NOT NULL,
-    payment_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    payment_method ENUM('cash','card','transfer') NOT NULL,
-    payment_type ENUM('deposit','final','penalty') NOT NULL,
-    status ENUM('pending', 'completed', 'failed', 'refunded') NOT NULL DEFAULT 'pending',
-    card_last_four VARCHAR(4), -- Solo si es con tarjeta
+-- INDEX for FK
+CREATE INDEX idx_reservations_room_id ON reservations(room_id);
 
-    FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE RESTRICT
-) ENGINE=InnoDB;
+
+-- ==============================
+-- TABLE: payments
+-- ==============================
+CREATE TABLE payments (
+    id SERIAL PRIMARY KEY,
+    reservation_id INT NOT NULL,
+    amount NUMERIC(10,2) NOT NULL,
+    payment_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    payment_method payment_method_enum NOT NULL,
+    status payment_status_enum NOT NULL DEFAULT 'completed',
+
+    CONSTRAINT payments_reservation_fk
+        FOREIGN KEY (reservation_id)
+        REFERENCES reservations(id)
+        ON DELETE RESTRICT
+);
+
+-- INDEX for FK
+CREATE INDEX idx_payments_reservation_id ON payments(reservation_id);
+
+

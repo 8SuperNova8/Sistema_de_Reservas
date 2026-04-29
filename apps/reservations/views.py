@@ -6,6 +6,7 @@ from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
+from drf_spectacular.utils import extend_schema
 from apps.accounts.permissions import IsSuperUser, IsReceptionist
 from apps.reservations.models import Reservation
 from apps.reservations.serializers import ReservationSerializer, ReservationPublicDetailSerializer, ReservationAdminSerializer ,ChangeStatusSerializer, ExtraChargesSerializer
@@ -62,18 +63,19 @@ class AdminReservationViewSet(
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet
 ):
-    #serializer_class = ReservationSerializer
+    serializer_class = ReservationAdminSerializer
     queryset = Reservation.objects.all()
     permission_classes = [IsReceptionist | IsSuperUser]
 
+    serializer_action_classes = {
+        'create' : ReservationSerializer,
+        'change_status': ChangeStatusSerializer,
+        'extra_charges': ExtraChargesSerializer
+    }
+
     def get_serializer_class(self):
-        if self.action == 'create':
-            return ReservationSerializer
-        elif self.action == 'change_status':
-            return ChangeStatusSerializer
-        elif self.action == 'extra_charges':
-            return ExtraChargesSerializer
-        return ReservationAdminSerializer
+        return self.serializer_action_classes.get(self.action, self.serializer_class)
+       
 
     #configuracion de los filtros traidos de /filters
     filter_backends = [DjangoFilterBackend]
@@ -85,6 +87,7 @@ class AdminReservationViewSet(
         send_reservation_mail(reservation)   
 
     # endpoint para cancelar (confirmed ->chek_in o -> no_show)
+    @extend_schema(description='cambio de estado por reglas de transicion de negocio')
     @action(detail=True, methods=['patch'], serializer_class=ChangeStatusSerializer)
     def change_status (self, request, pk=None):
         reservation = self.get_object()
@@ -100,6 +103,9 @@ class AdminReservationViewSet(
 
         if not new_status or new_status not in allowed.get(reservation.status, []) :
             return Response({'error': 'invalido el cambio'}, status=status.HTTP_400_BAD_REQUEST)
+        #no permite cerrar la reserva si hay saldo pendiente.
+        if new_status == 'finished' and reservation.balance > 0:
+            return Response({'error':'The reservation cannot be completed because payment is pending.'}, status=status.HTTP_400_BAD_REQUEST)
         
         reservation.status = new_status
         reservation.save()

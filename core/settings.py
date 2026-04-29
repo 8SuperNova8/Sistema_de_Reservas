@@ -1,6 +1,7 @@
 from dotenv import load_dotenv  
 import os  
 from datetime import timedelta
+from urllib.parse import urlparse, parse_qsl
   
 load_dotenv()
 
@@ -14,12 +15,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-o26c_#18&9x+b-a$^n=#&*fgz!4h&xbaomq1ih*!%kj10_j+1('
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False') == "True"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
 
 AUTH_USER_MODEL = "accounts.User"
 
@@ -34,7 +35,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework', 
     'drf_spectacular',
-    'drf_spectacular_sidecar',  
+    #'drf_spectacular_sidecar',  
     'django_filters',                    
     'apps.rooms',
     'apps.reservations',
@@ -76,19 +77,34 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
+'''
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',  # o postgresql, oracle, etc.
+        'ENGINE': 'django.db.backends.postgresql',  # o postgresql, oracle, mysql etc.
         'NAME': os.environ.get('DB_NAME'),
         'USER': os.environ.get('DB_USER'),
         'PASSWORD': os.environ.get('DB_PASSWORD'),
         'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': '3306',
+        'PORT': os.environ.get('DB_PORT'),
+    }
+}
+'''
+#conexión de la bd Neon
+tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': tmpPostgres.path.replace('/', ''),
+        'USER': tmpPostgres.username,
+        'PASSWORD': tmpPostgres.password,
+        'HOST': tmpPostgres.hostname,
+        'PORT': 5432,
+        #'OPTIONS': dict(parse_qsl(tmpPostgres.query)),
+        'OPTIONS': {'sslmode': 'require'},
     }
 }
 
-#no permitir migraciones de mis apps que estan en manage=false
+#no permitir migraciones(archivo) de mis apps que estan en manage=false
 MIGRATION_MODULES = {
     'payments': None,                   
     'reservations': None,

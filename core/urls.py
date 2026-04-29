@@ -2,7 +2,8 @@ from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import (
     SpectacularAPIView,
-    SpectacularSwaggerView
+    SpectacularSwaggerView,
+    SpectacularRedocView
 )
 
 urlpatterns = [
@@ -11,9 +12,10 @@ urlpatterns = [
     path('api/', include('apps.rooms.urls')),
     path('api/', include('apps.reservations.urls')),
     path('api/', include('apps.payments.urls')),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='api-schema'), name='api-docs'),
-    path('api/schema/', SpectacularAPIView.as_view(), name='api-schema'),
-    path('api/', include('apps.accounts.urls'))
+    path('api/', include('apps.accounts.urls')),
+    path('api/schema/', SpectacularAPIView.as_view(), name='api_schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='api_schema'), name='api-docs'),    
+    path("api/schema/redoc/", SpectacularRedocView.as_view(url_name="api_schema"), name="redoc"),
     
 
 ]

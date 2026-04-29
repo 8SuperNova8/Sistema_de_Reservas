@@ -63,7 +63,14 @@ class ReservationAdminSerializer(serializers.ModelSerializer):
   
 
 class ChangeStatusSerializer(serializers.Serializer):
-    status = serializers.CharField()
+    status = serializers.ChoiceField(
+        choices=[("checked_in", "checked_in"),
+        ("no_show", "no_show"),
+        ("cancelled", "cancelled"),
+        ("finished", "finished")],
+        help_text="Nuevo estado permitido según las reglas de transición (confirmed -> checked_in/no_show/cancelled, checked_in -> finished)"
+    
+    )
 
     def validate(self, data):
         #verificar campos adicioales
