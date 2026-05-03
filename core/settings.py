@@ -22,6 +22,8 @@ DEBUG = os.environ.get('DEBUG', 'False') == "True"
 
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
 
+SEND_EMAILS = os.getenv("SEND_EMAILS", "True") == "True"
+
 AUTH_USER_MODEL = "accounts.User"
 
 # Application definition

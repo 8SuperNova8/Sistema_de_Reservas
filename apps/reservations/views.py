@@ -12,6 +12,7 @@ from apps.reservations.models import Reservation
 from apps.reservations.serializers import ReservationSerializer, ReservationPublicDetailSerializer, ReservationAdminSerializer ,ChangeStatusSerializer, ExtraChargesSerializer
 from django.db import transaction
 from .throttles import ReservationThrottle
+from django.conf import settings #envio solo en desarrollo valida la variable en core/settings.py
 
 
 class ReservationViewSet (#para publico
@@ -84,7 +85,10 @@ class AdminReservationViewSet(
     @transaction.atomic # valida que todo se ejecute sin error sino hace rollback
     def perform_create(self, serializer):
         reservation = serializer.save()
-        send_reservation_mail(reservation)   
+        send_reservation_mail(reservation) 
+
+        if settings.SEND_EMAILS:
+            send_reservation_mail(reservation)  
 
     # endpoint para cancelar (confirmed ->chek_in o -> no_show)
     @extend_schema(description='cambio de estado por reglas de transicion de negocio')
